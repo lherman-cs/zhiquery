@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/dustin/go-humanize"
 )
@@ -279,9 +280,14 @@ func main() {
 	must(err)
 
 	var datas []Data
+	var mu sync.Mutex
+	var wg sync.WaitGroup
 
+	wg.Add(len(datasets))
 	for _, dataset := range datasets {
-		func() {
+		dataset := dataset
+		go func() {
+			var datasetDatas []Data
 			f, err := os.Open(path.Join(repository, dataset.Name()))
 			must(err)
 			defer f.Close()
@@ -314,12 +320,18 @@ func main() {
 				data.GrowthRate, data.Years = calculateGrowthRate(data.ZHIs)
 
 				if filter(&data) {
-					datas = append(datas, data)
+					datasetDatas = append(datasetDatas, data)
 				}
 			}
+
+			mu.Lock()
+			datas = append(datas, datasetDatas...)
+			mu.Unlock()
+			wg.Done()
 		}()
 	}
 
+	wg.Wait()
 	sort.Sort(SortableData(datas))
 	for _, data := range datas {
 		fmt.Println(&data)
