@@ -21,7 +21,8 @@ const (
 
 func must(err error) {
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 }
 
@@ -244,7 +245,32 @@ func parseFilters(tokens []string) (FilterFn, int, error) {
 	return nil, -1, fmt.Errorf("Unfinished tokens")
 }
 
+func help() {
+	fmt.Printf(`
+Usage: ./zhiquery <dataset_dir> [ <kind_1>:<arg_1> or/and <kind_2>:<arg_2> or/and [ <kind_n>:<arg_n> ... ]]
+
+Kinds and Arguments:
+  * State:
+    * arg_1: exact match state (string)
+  * County
+    * arg_1: exact match county (string)
+  * City
+    * arg_1: exact match city (string)
+  * GrowthRate
+    * arg_1: lower bound growth rate (float)
+  * Price
+    * arg_1: upper bound price (float)
+  * ZipCode
+    * arg_1: exact match zip code (unsigned integer)
+`)
+}
+
 func main() {
+	if len(os.Args) < 2 {
+		help()
+		return
+	}
+
 	repository := os.Args[1]
 	datasets, err := ioutil.ReadDir(repository)
 	must(err)
