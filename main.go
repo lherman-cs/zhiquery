@@ -86,6 +86,13 @@ func filterByZipCode(zipCode uint64) FilterFn {
 	})
 }
 
+func filterByDataset(dataset string) FilterFn {
+	dataset = strings.ToLower(dataset)
+	return FilterFn(func(d *Data) bool {
+		return strings.ToLower(d.Dataset) == dataset
+	})
+}
+
 func filterByState(state string) FilterFn {
 	state = strings.ToLower(state)
 	return FilterFn(func(d *Data) bool {
@@ -169,9 +176,10 @@ func parseFilters(tokens []string) (FilterFn, int, error) {
 		kind, arg := splitted[0], splitted[1]
 
 		stringFilters := map[string]func(string) FilterFn{
-			"State":  filterByState,
-			"County": filterByCounty,
-			"City":   filterByCity,
+			"Dataset": filterByDataset,
+			"State":   filterByState,
+			"County":  filterByCounty,
+			"City":    filterByCity,
 		}
 		floatFilters := map[string]func(float64) FilterFn{
 			"GrowthRate": filterByGrowthRate,
@@ -251,6 +259,8 @@ func help() {
 Usage: ./zhiquery <dataset_dir> [ <kind_1>:<arg_1> or/and <kind_2>:<arg_2> or/and [ <kind_n>:<arg_n> ... ]]
 
 Kinds and Arguments:
+	* Dataset:
+	  * arg_1: exact match dataset (string)
   * State:
     * arg_1: exact match state (string)
   * County
